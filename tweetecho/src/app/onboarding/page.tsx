@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { RadioGroupItem } from "@/components/ui/radio-group";
 import { TweetStyle } from "@/types";
 import { toast } from "sonner";
 import axios from "axios";
@@ -123,42 +122,5 @@ export default function OnboardingPage() {
         </Card>
       </div>
     </PageLayout>
-  );
-}
-
-interface StyleOptionProps {
-  value: string;
-  label: string;
-  description: string;
-  emoji: string;
-  currentValue: string;
-}
-
-function StyleOption({
-  value,
-  label,
-  description,
-  emoji,
-  currentValue,
-}: StyleOptionProps) {
-  const isSelected = value === currentValue;
-
-  return (
-    <div
-      className={`relative rounded-lg border p-4 ${
-        isSelected ? "border-blue-500 bg-blue-50" : "border-gray-200"
-      }`}
-    >
-      <RadioGroupItem
-        value={value}
-        id={`style-${value}`}
-        className="absolute right-4 top-4"
-      />
-      <div className="mb-2 text-2xl">{emoji}</div>
-      <Label htmlFor={`style-${value}`} className="text-base font-medium">
-        {label}
-      </Label>
-      <p className="mt-1 text-sm text-gray-500">{description}</p>
-    </div>
   );
 }
