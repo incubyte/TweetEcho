@@ -111,7 +111,7 @@ export default function GeneratePage() {
             <CardHeader>
               <CardTitle>What would you like to tweet about?</CardTitle>
               <CardDescription>
-                Enter a topic, and we'll generate tweet suggestions based on your profile and preferences.
+                Enter a topic, and we&apos;ll generate tweet suggestions based on your profile and preferences.
               </CardDescription>
             </CardHeader>
             
@@ -187,7 +187,7 @@ export default function GeneratePage() {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold">Choose a Tweet</h2>
             <p className="text-gray-600">
-              Select the tweet you like best. You'll be able to edit it before publishing.
+              Select the tweet you like best. You&apos;ll be able to edit it before publishing.
             </p>
             
             <div className="grid gap-4 md:grid-cols-1">
