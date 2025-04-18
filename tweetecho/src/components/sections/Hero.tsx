@@ -1,19 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Megaphone, Twitter as TwitterIcon, CheckCircle } from "lucide-react";
-import { useRouter } from "next/navigation";
 
-const Hero = () => {
-  const router = useRouter();
-
-  const handleTwitterLogin = () => {
-    // For now, we'll simulate Twitter login by directly navigating to /console
-    // This should be replaced with actual Twitter OAuth flow
-    window.location.href = "https://twitter.com/i/oauth2/authorize";
-    // After successful auth, Twitter will redirect back to your app
-    // Then you can navigate to console
-    router.push("/console");
-  };
-
+const Hero = ({ handleTwitterLogin }: { handleTwitterLogin: () => void }) => {
   return (
     <section className="min-h-[90vh] flex items-center justify-center bg-gradient-to-b from-blue-50 to-white dark:from-gray-900 dark:to-gray-800">
       <div className="container px-4 mx-auto">
