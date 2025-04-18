@@ -75,6 +75,7 @@ export default function OnboardingPage() {
   const handleConnectTwitter = () => {
     axios.get("/api/auth/twitter/get-url").then((response) => {
       console.log("response: ", response);
+      sessionStorage.setItem("codeVerifier", response.data.codeVerifier);
       router.replace(response.data.authUrl);
     });
   };
