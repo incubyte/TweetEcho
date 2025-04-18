@@ -1,4 +1,4 @@
-import { getFromMemory, saveInMemory } from "@/app/api/memory";
+import { saveInMemory } from "@/app/api/memory";
 import {
   twitterApiClient,
   twitterCallbackUrl,
