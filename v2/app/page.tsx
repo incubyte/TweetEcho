@@ -13,7 +13,7 @@ export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
-  const [messages, setMessages] = useState<{text: string, timestamp: string}[]>([]);
+  const [messages, setMessages] = useState<{text: string, timestamp: string, isAiGenerated?: boolean}[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -45,21 +45,49 @@ export default function Home() {
     await supabase.auth.signOut();
   };
   
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!message.trim()) return;
     
     setIsSubmitting(true);
     
-    // Add the message to the list
-    const newMessage = {
-      text: message,
-      timestamp: new Date().toISOString()
-    };
-    
-    setMessages(prev => [...prev, newMessage]);
-    setMessage("");
-    setIsSubmitting(false);
+    try {
+      // Add the original message
+      const originalMessage = {
+        text: message,
+        timestamp: new Date().toISOString()
+      };
+      
+      setMessages(prev => [...prev, originalMessage]);
+      
+      // Call the API to generate posts
+      const response = await fetch('/api/generate-posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: message })
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to generate posts');
+      }
+      
+      const data = await response.json();
+      
+      // Add the AI-generated posts
+      const aiPosts = data.posts.map((post: string) => ({
+        text: post,
+        timestamp: new Date().toISOString(),
+        isAiGenerated: true
+      }));
+      
+      // Add AI-generated messages to the state
+      setMessages(prev => [...prev, ...aiPosts]);
+      setMessage("");
+    } catch (error) {
+      console.error('Error generating AI posts:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (loading) {
@@ -133,7 +161,21 @@ export default function Home() {
                   <h3 className="text-lg font-medium mb-4">Your Messages</h3>
                   <div className="space-y-4">
                     {messages.map((msg, index) => (
-                      <div key={index} className="border border-[hsl(var(--border))] rounded-md p-4">
+                      <div 
+                        key={index} 
+                        className={`border rounded-md p-4 ${
+                          msg.isAiGenerated 
+                            ? "border-[hsl(var(--primary))] bg-[hsla(var(--primary),0.05)]" 
+                            : "border-[hsl(var(--border))]"
+                        }`}
+                      >
+                        {msg.isAiGenerated && (
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]">
+                              AI Generated
+                            </span>
+                          </div>
+                        )}
                         <p>{msg.text}</p>
                         <p className="text-xs text-muted-foreground mt-2">
                           {new Date(msg.timestamp).toLocaleString()}
