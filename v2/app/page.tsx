@@ -117,7 +117,7 @@ export default function Home() {
       const baseUrl =
         typeof window !== "undefined"
           ? window.location.origin
-          : "http://localhost:3000";
+          : process.env.NEXT_PUBLIC_BASE_URL;
 
       const response = await fetch(`${baseUrl}/api/generate-posts`, {
         method: "POST",
@@ -186,9 +186,9 @@ export default function Home() {
             priority
           />
           <div className="space-x-2">
-            <Button variant="secondary" asChild>
+            {/* <Button variant="secondary" asChild>
               <Link href="/dashboard">Manage Profile</Link>
-            </Button>
+            </Button> */}
             <Button variant="outline" onClick={handleSignOut}>
               Sign Out
             </Button>
@@ -244,7 +244,7 @@ export default function Home() {
                             const baseUrl =
                               typeof window !== "undefined"
                                 ? window.location.origin
-                                : "http://localhost:3000";
+                                : process.env.NEXT_PUBLIC_BASE_URL;
 
                             const response = await fetch(
                               `${baseUrl}/api/scrape`,

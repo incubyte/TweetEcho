@@ -1,5 +1,6 @@
 "use client";
 
+import SignInButton from "@/components/auth/signin-button";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,6 +13,7 @@ import { useRouter } from "next/navigation";
 
 export default function SignIn() {
   const router = useRouter();
+
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="w-full max-w-md">
@@ -24,8 +26,13 @@ export default function SignIn() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <Button className="w-full" onClick={() => router.replace("/")}>
-            Continue
+          <SignInButton />
+          <Button
+            className="w-full mt-4"
+            variant="outline"
+            onClick={() => router.replace("/")}
+          >
+            Go to Dashboard
           </Button>
         </CardContent>
       </Card>
