@@ -11,8 +11,9 @@ async function getCurrentUser() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
-          return cookieStore.get(name)?.value;
+        async get(name) {
+          const cookie = await cookieStore.get(name);
+          return cookie?.value;
         },
         set() {}, // No-op
         remove() {}, // No-op

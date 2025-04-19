@@ -111,7 +111,12 @@ export default function Home() {
 
     try {
       // Call the API to generate posts with metadata
-      const response = await fetch("/api/generate-posts", {
+      // Add origin to make it an absolute URL when running on server
+      const baseUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : 'http://localhost:3000';
+        
+      const response = await fetch(`${baseUrl}/api/generate-posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -119,6 +124,7 @@ export default function Home() {
           userId: user?.id || "user-123",
           useStoredMetadata: true, // Try to use stored metadata if available
         }),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -231,7 +237,12 @@ export default function Home() {
 
                           setIsScrapingUrl(true);
                           try {
-                            const response = await fetch("/api/scrape", {
+                            // Add origin to make it an absolute URL when running on server 
+                            const baseUrl = typeof window !== 'undefined' 
+                              ? window.location.origin 
+                              : 'http://localhost:3000';
+                              
+                            const response = await fetch(`${baseUrl}/api/scrape`, {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({
@@ -239,6 +250,7 @@ export default function Home() {
                                 userId: user?.id || "user-123",
                                 useStoredMetadata: true, // Try to use stored metadata if available
                               }),
+                              credentials: 'include'
                             });
 
                             if (!response.ok) {

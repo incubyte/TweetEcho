@@ -59,6 +59,19 @@ export async function middleware(request: NextRequest) {
   // Check auth condition
   const isAuthRoute = request.nextUrl.pathname.startsWith('/auth');
   const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard');
+  const isApiRoute = request.nextUrl.pathname.startsWith('/api');
+  
+  // If accessing an API route without being authenticated (with exceptions)
+  if (isApiRoute && !session && 
+      !request.nextUrl.pathname.startsWith('/api/auth') && 
+      !request.nextUrl.pathname.startsWith('/api/scrape') && 
+      !request.nextUrl.pathname.startsWith('/api/generate-posts')) {
+    // Return 401 Unauthorized for API routes instead of redirecting
+    return NextResponse.json(
+      { error: 'Unauthorized. Please sign in.' }, 
+      { status: 401 }
+    );
+  }
   
   // If accessing a protected route without being authenticated
   if (isProtectedRoute && !session) {
@@ -77,5 +90,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/dashboard/:path*', '/auth/:path*'],
+  matcher: ['/dashboard/:path*', '/auth/:path*', '/api/:path*'],
 };

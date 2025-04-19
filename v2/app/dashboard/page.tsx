@@ -39,6 +39,10 @@ export default function Dashboard() {
             if (error?.message?.includes('relation') && error?.message?.includes('does not exist')) {
               console.error('Database tables not found. Please initialize the database.');
               setDbInitialized(false);
+            } else if (error?.message?.includes('401') || error?.message?.includes('Unauthorized')) {
+              console.error('Authentication error, redirecting to login page');
+              // Redirect to login page
+              window.location.href = '/auth/signin';
             } else {
               console.error('Error fetching user data:', error);
             }

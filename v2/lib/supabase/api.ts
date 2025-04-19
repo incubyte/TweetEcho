@@ -3,7 +3,14 @@ import { UserMetadata, WebContent } from './schemas';
 // User Metadata API
 export async function getUserMetadata(userId: string): Promise<UserMetadata | null> {
   try {
-    const response = await fetch(`/api/user-metadata?userId=${userId}`);
+    // Add origin to make it an absolute URL when running on server
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+    const response = await fetch(`${baseUrl}/api/user-metadata?userId=${userId}`, {
+      credentials: 'include'
+    });
     
     if (response.status === 404 || response.status === 204) {
       // Not found or no content
@@ -31,12 +38,18 @@ export async function saveUserMetadata(metadata: UserMetadata): Promise<UserMeta
   try {
     console.log('Saving metadata to API:', metadata);
     
-    const response = await fetch('/api/user-metadata', {
+    // Add origin to make it an absolute URL when running on server
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+    const response = await fetch(`${baseUrl}/api/user-metadata`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(metadata),
+      credentials: 'include'
     });
     
     if (!response.ok) {
@@ -68,12 +81,18 @@ export async function updateUserMetadata(metadata: UserMetadata): Promise<UserMe
       throw new Error('Cannot update metadata without ID');
     }
     
-    const response = await fetch('/api/user-metadata', {
+    // Add origin to make it an absolute URL when running on server
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+    const response = await fetch(`${baseUrl}/api/user-metadata`, {
       method: 'PUT',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(metadata),
+      credentials: 'include'
     });
     
     if (!response.ok) {
@@ -89,8 +108,14 @@ export async function updateUserMetadata(metadata: UserMetadata): Promise<UserMe
 
 export async function deleteUserMetadata(id: string): Promise<boolean> {
   try {
-    const response = await fetch(`/api/user-metadata?id=${id}`, {
+    // Add origin to make it an absolute URL when running on server
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+    const response = await fetch(`${baseUrl}/api/user-metadata?id=${id}`, {
       method: 'DELETE',
+      credentials: 'include'
     });
     
     if (!response.ok) {
@@ -107,7 +132,14 @@ export async function deleteUserMetadata(id: string): Promise<boolean> {
 // Web Content API
 export async function getUserWebContent(userId: string): Promise<WebContent[]> {
   try {
-    const response = await fetch(`/api/web-content?userId=${userId}`);
+    // Add origin to make it an absolute URL when running on server
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+    const response = await fetch(`${baseUrl}/api/web-content?userId=${userId}`, {
+      credentials: 'include'
+    });
     
     if (response.status === 404 || response.status === 204) {
       // Not found or no content
@@ -134,7 +166,14 @@ export async function getUserWebContent(userId: string): Promise<WebContent[]> {
 export async function getWebContentByUrl(userId: string, url: string): Promise<WebContent | null> {
   try {
     const encodedUrl = encodeURIComponent(url);
-    const response = await fetch(`/api/web-content?userId=${userId}&url=${encodedUrl}`);
+    // Add origin to make it an absolute URL when running on server
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+    const response = await fetch(`${baseUrl}/api/web-content?userId=${userId}&url=${encodedUrl}`, {
+      credentials: 'include'
+    });
     
     if (!response.ok) {
       if (response.status === 404) {
@@ -152,12 +191,18 @@ export async function getWebContentByUrl(userId: string, url: string): Promise<W
 
 export async function saveWebContent(content: WebContent): Promise<WebContent | null> {
   try {
-    const response = await fetch('/api/web-content', {
+    // Add origin to make it an absolute URL when running on server
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+    const response = await fetch(`${baseUrl}/api/web-content`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify(content),
+      credentials: 'include'
     });
     
     if (!response.ok) {
@@ -173,8 +218,14 @@ export async function saveWebContent(content: WebContent): Promise<WebContent | 
 
 export async function deleteWebContent(id: string): Promise<boolean> {
   try {
-    const response = await fetch(`/api/web-content?id=${id}`, {
+    // Add origin to make it an absolute URL when running on server
+    const baseUrl = typeof window !== 'undefined' 
+      ? window.location.origin 
+      : process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+      
+    const response = await fetch(`${baseUrl}/api/web-content?id=${id}`, {
       method: 'DELETE',
+      credentials: 'include'
     });
     
     if (!response.ok) {

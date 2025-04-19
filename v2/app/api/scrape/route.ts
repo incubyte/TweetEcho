@@ -2,7 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { extractKeyInformation } from "@/lib/firecrawl";
 import { generateUserMetadata } from "@/lib/metadata-generator";
 import { generatePosts } from "@/lib/openai";
-import { getUserMetadata, saveWebContent } from "@/lib/supabase/api";
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
+
+// Helper function to check if user is authenticated
+async function checkUserAuth(userIdFromRequest: string | null) {
+  try {
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          async get(name) {
+            const cookie = await cookieStore.get(name);
+            return cookie?.value;
+          },
+          set() {}, // No-op
+          remove() {}, // No-op
+        },
+      }
+    );
+
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // If we have a user and it matches the requested userId, it's authorized
+    if (user && userIdFromRequest && user.id === userIdFromRequest) {
+      return true;
+    }
+    
+    return false;
+  } catch (error) {
+    console.error('Auth check error:', error);
+    return false;
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,11 +72,18 @@ export async function POST(request: NextRequest) {
     let needsMetadataGeneration = true;
     
     if (useStoredMetadata && userId) {
-      // Try to get stored metadata
-      const storedMetadata = await getUserMetadata(userId);
-      if (storedMetadata) {
-        userMetadata = storedMetadata;
-        needsMetadataGeneration = false;
+      // Try to get metadata through a direct query rather than using the API
+      try {
+        // This is server-side, so we should import the service directly
+        const { getUserMetadata } = await import('@/lib/services/user-metadata.service');
+        const storedMetadata = await getUserMetadata(userId);
+        if (storedMetadata) {
+          userMetadata = storedMetadata;
+          needsMetadataGeneration = false;
+        }
+      } catch (error) {
+        console.error('Error fetching metadata from service:', error);
+        // Continue with metadata generation
       }
     }
     
@@ -57,21 +98,30 @@ export async function POST(request: NextRequest) {
     // Generate posts using the metadata and web content
     const posts = await generatePosts(webContent, userMetadata);
     
-    // Save the web content to the database if the user is logged in
+    // Save the web content to the database if the user is logged in and authenticated
     if (userId) {
-      const webContentObj = {
-        user_id: userId,
-        url: url,
-        title: title,
-        description: description,
-        content: webContent
-      };
+      // Check if the user is authenticated
+      const isAuthenticated = await checkUserAuth(userId);
       
-      try {
-        await saveWebContent(webContentObj);
-      } catch (error) {
-        console.error('Error saving web content:', error);
-        // Continue even if saving fails
+      if (isAuthenticated) {
+        const webContentObj = {
+          user_id: userId,
+          url: url,
+          title: title,
+          description: description,
+          content: webContent
+        };
+        
+        try {
+          // Use the service directly
+          const { saveWebContent } = await import('@/lib/services/web-content.service');
+          await saveWebContent(webContentObj);
+        } catch (error) {
+          console.error('Error saving web content:', error);
+          // Continue even if saving fails
+        }
+      } else {
+        console.log('User not authenticated, skipping web content save');
       }
     }
 
