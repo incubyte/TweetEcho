@@ -17,31 +17,41 @@ export async function generatePosts(prompt: string): Promise<string[]> {
       messages: [
         {
           role: 'system',
-          content: 'You are a creative writing assistant. Generate two unique, creative, and engaging social media posts based on the user\'s input. Make the posts different in style and tone. Each post should be concise (1-3 sentences only) and suitable for a social platform. Return only the generated posts, nothing else.'
+          content: `You are a creative writing assistant that generates thought-provoking and engaging social media posts. 
+          Generate exactly THREE unique posts based on the user's input topic. 
+          Each post should be:
+          1. Different in style, tone, and perspective
+          2. Concise (1-3 sentences only)
+          3. Thought-provoking and conversation-starting
+          4. Not directly quote or mention the user's exact prompt
+          5. Suitable for a knowledge-sharing social platform
+          
+          Return only the three generated posts, each on its own line. Do not include any explanatory text, post numbers, or formatting.`
         },
         {
           role: 'user',
           content: prompt
         }
       ],
-      temperature: 0.7,
-      max_tokens: 400,
-      n: 1, // We'll parse two posts from one response
+      temperature: 0.8,
+      max_tokens: 600,
+      n: 1,
     });
 
     const content = response.choices[0]?.message.content || '';
     
-    // Split the content into two posts
+    // Split the content into three posts
     const posts = content
       .split(/\n+/)
       .filter(line => line.trim())
-      .slice(0, 2);
+      .slice(0, 3);
     
-    // If we don't have exactly 2 posts, generate default ones
-    if (posts.length !== 2) {
+    // If we don't have exactly 3 posts, generate default ones
+    if (posts.length !== 3) {
       return [
-        `Reflecting on "${prompt}" today. What are your thoughts?`,
-        `Just pondering about ${prompt}. Would love to hear other perspectives!`
+        "What if the conventional wisdom on this topic has been wrong all along?",
+        "Sometimes the most valuable insights come from questioning our most basic assumptions.",
+        "The intersection of different perspectives often reveals surprising truths."
       ];
     }
     
@@ -49,8 +59,9 @@ export async function generatePosts(prompt: string): Promise<string[]> {
   } catch (error) {
     console.error('Error generating posts:', error);
     return [
-      `Reflecting on "${prompt}" today. What are your thoughts?`,
-      `Just pondering about ${prompt}. Would love to hear other perspectives!`
+      "What if the conventional wisdom on this topic has been wrong all along?",
+      "Sometimes the most valuable insights come from questioning our most basic assumptions.",
+      "The intersection of different perspectives often reveals surprising truths."
     ];
   }
 }

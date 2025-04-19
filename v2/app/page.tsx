@@ -52,14 +52,6 @@ export default function Home() {
     setIsSubmitting(true);
     
     try {
-      // Add the original message
-      const originalMessage = {
-        text: message,
-        timestamp: new Date().toISOString()
-      };
-      
-      setMessages(prev => [...prev, originalMessage]);
-      
       // Call the API to generate posts
       const response = await fetch('/api/generate-posts', {
         method: 'POST',
@@ -73,10 +65,13 @@ export default function Home() {
       
       const data = await response.json();
       
+      // Get current timestamp to ensure posts appear together
+      const currentTime = new Date().toISOString();
+      
       // Add the AI-generated posts
       const aiPosts = data.posts.map((post: string) => ({
         text: post,
-        timestamp: new Date().toISOString(),
+        timestamp: currentTime,
         isAiGenerated: true
       }));
       
@@ -136,12 +131,12 @@ export default function Home() {
               <form onSubmit={handleSubmit} className="space-y-4 mt-6">
                 <div>
                   <label htmlFor="message" className="block text-sm font-medium mb-2">
-                    Share your thoughts
+                    Enter a topic to generate thought-provoking posts
                   </label>
                   <textarea
                     id="message"
-                    rows={4}
-                    placeholder="What's on your mind?"
+                    rows={3}
+                    placeholder="Enter a topic, concept, or question..."
                     className="w-full rounded-md border border-[hsl(var(--border))] bg-transparent p-3 text-sm shadow-sm focus:border-[hsl(var(--ring))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
                     value={message}
                     onChange={(e) => setMessage(e.target.value)}
@@ -152,34 +147,34 @@ export default function Home() {
                   className="w-full"
                   disabled={isSubmitting || !message.trim()}
                 >
-                  {isSubmitting ? "Submitting..." : "Post Message"}
+                  {isSubmitting ? "Generating posts..." : "Generate AI Posts"}
                 </Button>
               </form>
 
               {messages.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="text-lg font-medium mb-4">Your Messages</h3>
+                  <h3 className="text-lg font-medium mb-4">Generated Thought-Starters</h3>
                   <div className="space-y-4">
                     {messages.map((msg, index) => (
                       <div 
                         key={index} 
-                        className={`border rounded-md p-4 ${
-                          msg.isAiGenerated 
-                            ? "border-[hsl(var(--primary))] bg-[hsla(var(--primary),0.05)]" 
-                            : "border-[hsl(var(--border))]"
-                        }`}
+                        className="border-[hsl(var(--primary))] bg-[hsla(var(--primary),0.05)] border rounded-md p-4"
                       >
-                        {msg.isAiGenerated && (
-                          <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]">
-                              AI Generated
-                            </span>
-                          </div>
-                        )}
-                        <p>{msg.text}</p>
-                        <p className="text-xs text-muted-foreground mt-2">
-                          {new Date(msg.timestamp).toLocaleString()}
-                        </p>
+                        <p className="font-medium text-md">{msg.text}</p>
+                        <div className="flex justify-between items-center mt-3">
+                          <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]">
+                            AI Generated
+                          </span>
+                          <button 
+                            className="text-xs text-[hsl(var(--primary))] hover:underline" 
+                            onClick={() => {
+                              // Implement social sharing or saving functionality in the future
+                              alert('Share feature coming soon!');
+                            }}
+                          >
+                            Share
+                          </button>
+                        </div>
                       </div>
                     ))}
                   </div>
