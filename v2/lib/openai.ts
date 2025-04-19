@@ -11,12 +11,17 @@ const openai = new OpenAI({
   }
 });
 
-export async function generatePosts(prompt: string, userId: string = 'user-123'): Promise<string[]> {
+export async function generatePosts(
+  prompt: string, 
+  userMetadata: any
+): Promise<string[]> {
   try {
-    // First generate user metadata based on the prompt
-    const userMetadata = await generateUserMetadata(userId, prompt);
+    // If userMetadata is a string (user ID), generate metadata first
+    if (typeof userMetadata === 'string') {
+      userMetadata = await generateUserMetadata(userMetadata, prompt);
+    }
     
-    // Then use the metadata to generate personalized posts
+    // Use the provided metadata to generate personalized posts
     const response = await openai.chat.completions.create({
       model: 'anthropic/claude-3-opus-20240229',
       messages: [

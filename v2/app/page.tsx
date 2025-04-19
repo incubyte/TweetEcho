@@ -8,6 +8,10 @@ import SignInButton from "@/components/auth/signin-button";
 import { supabase } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "@supabase/supabase-js";
+import { getUserMetadata, getUserWebContent } from "@/lib/supabase/api";
+import { UserMetadata, WebContent } from "@/lib/supabase/schemas";
+import MetadataManager from "@/components/profile/metadata-manager";
+import WebContentManager from "@/components/profile/web-content-manager";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -22,11 +26,22 @@ export default function Home() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
 
+  // Supabase integration states
+  const [savedMetadata, setSavedMetadata] = useState<UserMetadata | null>(null);
+  const [savedWebContents, setSavedWebContents] = useState<WebContent[]>([]);
+  const [selectedWebContent, setSelectedWebContent] =
+    useState<WebContent | null>(null);
+
   useEffect(() => {
     async function getUser() {
       try {
         const { data } = await supabase.auth.getUser();
         setUser(data.user);
+
+        // If user is authenticated, fetch their saved data
+        if (data.user) {
+          fetchUserData(data.user.id);
+        }
       } catch (error) {
         console.error("Error fetching user:", error);
       } finally {
@@ -37,8 +52,20 @@ export default function Home() {
     getUser();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
+      async (event, session) => {
+        const newUser = session?.user ?? null;
+        setUser(newUser);
+
+        // If user logged in, fetch their data
+        if (newUser && event === "SIGNED_IN") {
+          fetchUserData(newUser.id);
+        }
+
+        // If user logged out, clear saved data
+        if (event === "SIGNED_OUT") {
+          setSavedMetadata(null);
+          setSavedWebContents([]);
+        }
       }
     );
 
@@ -46,6 +73,31 @@ export default function Home() {
       authListener.subscription.unsubscribe();
     };
   }, []);
+
+  // Function to fetch user's data from Supabase
+  const fetchUserData = async (userId: string) => {
+    try {
+      // Fetch user metadata (content persona)
+      const userMetadata = await getUserMetadata(userId);
+      setSavedMetadata(userMetadata);
+
+      if (userMetadata) {
+        // Use the saved metadata for content generation
+        setMetadata(userMetadata);
+      }
+
+      // Fetch user web content sources
+      const webContents = await getUserWebContent(userId);
+      setSavedWebContents(webContents);
+
+      if (webContents.length > 0) {
+        // Use the most recent web content for content generation
+        setWebContent(webContents[0].content);
+      }
+    } catch (error) {
+      console.error("Error fetching user data:", error);
+    }
+  };
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -59,13 +111,20 @@ export default function Home() {
 
     try {
       // Call the API to generate posts with metadata
-      const response = await fetch("/api/generate-posts", {
+      // Add origin to make it an absolute URL when running on server
+      const baseUrl = typeof window !== 'undefined' 
+        ? window.location.origin 
+        : 'http://localhost:3000';
+        
+      const response = await fetch(`${baseUrl}/api/generate-posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           prompt: message,
           userId: user?.id || "user-123",
+          useStoredMetadata: true, // Try to use stored metadata if available
         }),
+        credentials: 'include'
       });
 
       if (!response.ok) {
@@ -77,6 +136,11 @@ export default function Home() {
       // Store the metadata
       setMetadata(data.metadata);
 
+      // If we're using stored metadata, show this in the UI
+      if (data.usedStoredMetadata) {
+        setSavedMetadata(data.metadata);
+      }
+
       // Get current timestamp to ensure posts appear together
       const currentTime = new Date().toISOString();
 
@@ -85,6 +149,7 @@ export default function Home() {
         text: post,
         timestamp: currentTime,
         isAiGenerated: true,
+        usedStoredMetadata: data.usedStoredMetadata,
       }));
 
       // Add AI-generated messages to the state
@@ -117,9 +182,14 @@ export default function Home() {
             height={25}
             priority
           />
-          <Button variant="outline" onClick={handleSignOut}>
-            Sign Out
-          </Button>
+          <div className="space-x-2">
+            <Button variant="secondary" asChild>
+              <Link href="/dashboard">Manage Profile</Link>
+            </Button>
+            <Button variant="outline" onClick={handleSignOut}>
+              Sign Out
+            </Button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -167,13 +237,20 @@ export default function Home() {
 
                           setIsScrapingUrl(true);
                           try {
-                            const response = await fetch("/api/scrape", {
+                            // Add origin to make it an absolute URL when running on server 
+                            const baseUrl = typeof window !== 'undefined' 
+                              ? window.location.origin 
+                              : 'http://localhost:3000';
+                              
+                            const response = await fetch(`${baseUrl}/api/scrape`, {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },
                               body: JSON.stringify({
                                 url: urlInput,
                                 userId: user?.id || "user-123",
+                                useStoredMetadata: true, // Try to use stored metadata if available
                               }),
+                              credentials: 'include'
                             });
 
                             if (!response.ok) {
@@ -190,6 +267,27 @@ export default function Home() {
                             setWebContent(data.sourceContent);
                             setMetadata(data.metadata);
 
+                            // If using stored metadata, note this
+                            if (data.usedStoredMetadata) {
+                              setSavedMetadata(data.metadata);
+                            }
+
+                            // Save the web content to selectedWebContent for display
+                            if (user?.id && data.sourceContent) {
+                              const webContentObj = {
+                                id: `temp-${Date.now()}`,
+                                user_id: user.id,
+                                url: urlInput,
+                                title: data.title || "Analyzed Web Content",
+                                description:
+                                  data.description ||
+                                  "No description available",
+                                content: data.sourceContent,
+                                created_at: new Date().toISOString(),
+                              };
+                              setSelectedWebContent(webContentObj);
+                            }
+
                             // Get current timestamp
                             const currentTime = new Date().toISOString();
 
@@ -198,6 +296,8 @@ export default function Home() {
                               text: post,
                               timestamp: currentTime,
                               isAiGenerated: true,
+                              usedStoredMetadata: data.usedStoredMetadata,
+                              usedWebContent: true,
                             }));
 
                             // Add AI-generated messages to the state
@@ -278,9 +378,14 @@ export default function Home() {
                             <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]">
                               AI Generated
                             </span>
-                            {webContent && (
+                            {(webContent || msg.usedWebContent) && (
                               <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]">
                                 Web-Informed
+                              </span>
+                            )}
+                            {msg.usedStoredMetadata && (
+                              <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsla(var(--accent),0.8)] text-[hsl(var(--accent-foreground))]">
+                                Using Your Profile
                               </span>
                             )}
                           </div>
@@ -318,16 +423,23 @@ export default function Home() {
                 </p>
               </div>
 
-              {metadata && (
+              {metadata ? (
                 <>
                   <div className="space-y-3 mt-4 pt-4 border-t border-[hsl(var(--border))]">
                     <div className="flex justify-between items-center">
                       <h4 className="font-medium text-base">Content Profile</h4>
-                      {webContent && (
-                        <span className="text-xs px-2 py-1 bg-[hsla(var(--secondary),0.1)] text-[hsl(var(--secondary-foreground))] rounded-full">
-                          Web-Informed
-                        </span>
-                      )}
+                      <div className="flex gap-2 items-center">
+                        {savedMetadata && (
+                          <span className="text-xs px-2 py-1 bg-[hsla(var(--primary),0.1)] text-[hsl(var(--primary))] rounded-full">
+                            Saved
+                          </span>
+                        )}
+                        {webContent && (
+                          <span className="text-xs px-2 py-1 bg-[hsla(var(--secondary),0.1)] text-[hsl(var(--secondary-foreground))] rounded-full">
+                            Web-Informed
+                          </span>
+                        )}
+                      </div>
                     </div>
 
                     <div>
@@ -381,31 +493,85 @@ export default function Home() {
                         )}
                       </ul>
                     </div>
-                  </div>
 
-                  {webContent && (
-                    <div className="mt-4 pt-4 border-t border-[hsl(var(--border))]">
-                      <div className="flex justify-between items-center mb-2">
-                        <h4 className="font-medium text-base">
-                          Content Source
-                        </h4>
-                        <button
-                          className="text-xs text-[hsl(var(--primary))] hover:underline"
-                          onClick={() => {
-                            // Toggle showing full content
-                            alert("Full content viewer coming soon!");
-                          }}
-                        >
-                          View Full
-                        </button>
-                      </div>
-                      <div className="text-xs text-muted-foreground bg-[hsla(var(--muted),0.5)] rounded p-2 max-h-24 overflow-y-auto">
-                        {webContent.substring(0, 200)}...
-                      </div>
+                    <div className="pt-2">
+                      <Button variant="outline" size="sm" asChild>
+                        <Link href="/dashboard">
+                          {savedMetadata
+                            ? "Manage Content Profile"
+                            : "Save This Profile"}
+                        </Link>
+                      </Button>
                     </div>
-                  )}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="space-y-3 mt-4 pt-4 border-t border-[hsl(var(--border))]">
+                    <h4 className="font-medium text-base">Content Profile</h4>
+                    <p className="text-sm text-muted-foreground">
+                      You don't have a content profile yet. Generate one by
+                      analyzing a webpage or entering a topic above.
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Or, you can create and save a personalized content profile
+                      in your dashboard.
+                    </p>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="mt-2"
+                    >
+                      <Link href="/dashboard">Create Content Profile</Link>
+                    </Button>
+                  </div>
                 </>
               )}
+
+              {webContent || selectedWebContent ? (
+                <div className="mt-4 pt-4 border-t border-[hsl(var(--border))]">
+                  <div className="flex justify-between items-center mb-2">
+                    <h4 className="font-medium text-base">Content Source</h4>
+                    {savedWebContents.length > 0 && (
+                      <select
+                        className="text-xs border rounded px-2 py-1"
+                        value={selectedWebContent?.id || ""}
+                        onChange={(e) => {
+                          const selected = savedWebContents.find(
+                            (c) => c.id === e.target.value
+                          );
+                          setSelectedWebContent(selected || null);
+                          if (selected) {
+                            setWebContent(selected.content);
+                          }
+                        }}
+                      >
+                        <option value="">Current Source</option>
+                        {savedWebContents.map((content) => (
+                          <option key={content.id} value={content.id}>
+                            {content.title}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground bg-[hsla(var(--muted),0.5)] rounded p-2 max-h-24 overflow-y-auto">
+                    {(selectedWebContent?.content || webContent)?.substring(
+                      0,
+                      200
+                    )}
+                    ...
+                  </div>
+                  {savedWebContents.length > 0 && (
+                    <div className="mt-2 flex justify-end">
+                      <Button variant="link" size="sm" asChild>
+                        <Link href="/dashboard">Manage Content Sources</Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              ) : null}
             </CardContent>
           </Card>
         </div>
