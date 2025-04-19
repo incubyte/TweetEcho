@@ -9,7 +9,7 @@ export async function getUserMetadata(
     const baseUrl =
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_BASE_URL || "https://tweet-echo.vercel.app";
 
     const response = await fetch(
       `${baseUrl}/api/user-metadata?userId=${userId}`,
@@ -52,7 +52,7 @@ export async function saveUserMetadata(
     const baseUrl =
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_BASE_URL || "https://tweet-echo.vercel.app";
 
     const response = await fetch(`${baseUrl}/api/user-metadata`, {
       method: "POST",
@@ -91,7 +91,7 @@ export async function updateUserMetadata(
     const baseUrl =
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_BASE_URL || "https://tweet-echo.vercel.app";
 
     const response = await fetch(`${baseUrl}/api/user-metadata`, {
       method: "PUT",
@@ -119,7 +119,7 @@ export async function deleteUserMetadata(id: string): Promise<boolean> {
     const baseUrl =
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_BASE_URL || "https://tweet-echo.vercel.app";
 
     const response = await fetch(`${baseUrl}/api/user-metadata?id=${id}`, {
       method: "DELETE",
@@ -144,7 +144,7 @@ export async function getUserWebContent(userId: string): Promise<WebContent[]> {
     const baseUrl =
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_BASE_URL || "https://tweet-echo.vercel.app";
 
     const response = await fetch(
       `${baseUrl}/api/web-content?userId=${userId}`,
@@ -187,7 +187,7 @@ export async function getWebContentByUrl(
     const baseUrl =
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_BASE_URL || "https://tweet-echo.vercel.app";
 
     const response = await fetch(
       `${baseUrl}/api/web-content?userId=${userId}&url=${encodedUrl}`,
@@ -220,7 +220,7 @@ export async function saveWebContent(
     const baseUrl =
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_BASE_URL || "https://tweet-echo.vercel.app";
 
     const response = await fetch(`${baseUrl}/api/web-content`, {
       method: "POST",
@@ -248,7 +248,7 @@ export async function deleteWebContent(id: string): Promise<boolean> {
     const baseUrl =
       typeof window !== "undefined"
         ? window.location.origin
-        : process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+        : process.env.NEXT_PUBLIC_BASE_URL || "https://tweet-echo.vercel.app";
 
     const response = await fetch(`${baseUrl}/api/web-content?id=${id}`, {
       method: "DELETE",
