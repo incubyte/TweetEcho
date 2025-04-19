@@ -10,8 +10,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "@supabase/supabase-js";
 import { getUserMetadata, getUserWebContent } from "@/lib/supabase/api";
 import { UserMetadata, WebContent } from "@/lib/supabase/schemas";
-import MetadataManager from "@/components/profile/metadata-manager";
-import WebContentManager from "@/components/profile/web-content-manager";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -21,7 +19,7 @@ export default function Home() {
   const [messages, setMessages] = useState<
     { text: string; timestamp: string; isAiGenerated?: boolean }[]
   >([]);
-  const [metadata, setMetadata] = useState<any>(null);
+  const [metadata, setMetadata] = useState<UserMetadata | null>(null);
   const [webContent, setWebContent] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
@@ -112,10 +110,11 @@ export default function Home() {
     try {
       // Call the API to generate posts with metadata
       // Add origin to make it an absolute URL when running on server
-      const baseUrl = typeof window !== 'undefined' 
-        ? window.location.origin 
-        : 'http://localhost:3000';
-        
+      const baseUrl =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "http://localhost:3000";
+
       const response = await fetch(`${baseUrl}/api/generate-posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -124,7 +123,7 @@ export default function Home() {
           userId: user?.id || "user-123",
           useStoredMetadata: true, // Try to use stored metadata if available
         }),
-        credentials: 'include'
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -237,21 +236,25 @@ export default function Home() {
 
                           setIsScrapingUrl(true);
                           try {
-                            // Add origin to make it an absolute URL when running on server 
-                            const baseUrl = typeof window !== 'undefined' 
-                              ? window.location.origin 
-                              : 'http://localhost:3000';
-                              
-                            const response = await fetch(`${baseUrl}/api/scrape`, {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                url: urlInput,
-                                userId: user?.id || "user-123",
-                                useStoredMetadata: true, // Try to use stored metadata if available
-                              }),
-                              credentials: 'include'
-                            });
+                            // Add origin to make it an absolute URL when running on server
+                            const baseUrl =
+                              typeof window !== "undefined"
+                                ? window.location.origin
+                                : "http://localhost:3000";
+
+                            const response = await fetch(
+                              `${baseUrl}/api/scrape`,
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  url: urlInput,
+                                  userId: user?.id || "user-123",
+                                  useStoredMetadata: true, // Try to use stored metadata if available
+                                }),
+                                credentials: "include",
+                              }
+                            );
 
                             if (!response.ok) {
                               const errorData = await response.json();
@@ -303,13 +306,9 @@ export default function Home() {
                             // Add AI-generated messages to the state
                             setMessages((prev) => [...prev, ...aiPosts]);
                             setUrlInput("");
-                          } catch (error: any) {
+                          } catch (error) {
                             console.error("Error scraping URL:", error);
-                            alert(
-                              `Failed to scrape the URL: ${
-                                error.message || "Unknown error"
-                              }`
-                            );
+                            alert(`Failed to scrape the URL`);
                           } finally {
                             setIsScrapingUrl(false);
                           }
@@ -378,14 +377,9 @@ export default function Home() {
                             <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]">
                               AI Generated
                             </span>
-                            {(webContent || msg.usedWebContent) && (
+                            {webContent && (
                               <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]">
                                 Web-Informed
-                              </span>
-                            )}
-                            {msg.usedStoredMetadata && (
-                              <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsla(var(--accent),0.8)] text-[hsl(var(--accent-foreground))]">
-                                Using Your Profile
                               </span>
                             )}
                           </div>
@@ -510,7 +504,7 @@ export default function Home() {
                   <div className="space-y-3 mt-4 pt-4 border-t border-[hsl(var(--border))]">
                     <h4 className="font-medium text-base">Content Profile</h4>
                     <p className="text-sm text-muted-foreground">
-                      You don't have a content profile yet. Generate one by
+                      You don&apos;t have a content profile yet. Generate one by
                       analyzing a webpage or entering a topic above.
                     </p>
                     <p className="text-sm text-muted-foreground">

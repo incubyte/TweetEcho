@@ -1,5 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-import { Database } from './types';
+import { createClient } from "@supabase/supabase-js";
 
 // Create a serverless function to check and initiate database tables if needed
 export async function checkDatabaseTables() {
@@ -8,35 +7,41 @@ export async function checkDatabaseTables() {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
     if (!supabaseUrl || !supabaseServiceKey) {
-      console.error('Missing Supabase environment variables');
+      console.error("Missing Supabase environment variables");
       return;
     }
 
     const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
 
     // Check if the user_metadata table exists
-    const { error: metadataQueryError, count: metadataCount } = await supabase
-      .from('user_metadata')
-      .select('*', { count: 'exact', head: true });
+    const { error: metadataQueryError } = await supabase
+      .from("user_metadata")
+      .select("*", { count: "exact", head: true });
 
     // Check if the web_content table exists
-    const { error: webContentQueryError, count: webContentCount } = await supabase
-      .from('web_content')
-      .select('*', { count: 'exact', head: true });
+    const { error: webContentQueryError } = await supabase
+      .from("web_content")
+      .select("*", { count: "exact", head: true });
 
     // If we got PostgreSQL errors for "relation does not exist", tables need to be created
     const needsTableCreation =
-      (metadataQueryError?.message?.includes('relation "user_metadata" does not exist') ||
-       webContentQueryError?.message?.includes('relation "web_content" does not exist'));
+      metadataQueryError?.message?.includes(
+        'relation "user_metadata" does not exist'
+      ) ||
+      webContentQueryError?.message?.includes(
+        'relation "web_content" does not exist'
+      );
 
     if (needsTableCreation) {
-      console.log('Database tables not found. Please run "npm run setup-db" to set up the database.');
+      console.log(
+        'Database tables not found. Please run "npm run setup-db" to set up the database.'
+      );
       return { tablesExist: false };
     }
 
     return { tablesExist: true };
   } catch (error) {
-    console.error('Error checking database tables:', error);
+    console.error("Error checking database tables:", error);
     return { tablesExist: false, error };
   }
 }
