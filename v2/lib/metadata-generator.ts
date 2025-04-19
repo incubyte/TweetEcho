@@ -46,59 +46,84 @@ interface UserMetadata {
   };
 }
 
-export async function generateUserMetadata(userId: string, topic: string): Promise<UserMetadata> {
+export async function generateUserMetadata(
+  userId: string, 
+  topic: string, 
+  existingMetadata?: UserMetadata | null
+): Promise<UserMetadata> {
   try {
+    // Build system message
+    const systemMessage = existingMetadata 
+      ? `You are an AI assistant that regenerates user metadata profiles for content personalization.
+         Based on the provided topic and existing metadata profile, generate an updated user metadata profile in JSON format.
+         This updated profile should evolve from the existing one while maintaining some continuity.
+         Ensure the resulting profile maintains the same structure but includes new unique elements and variations.
+         The metadata should be varied, realistic, and tailored to optimize engagement on the given topic.
+         Return ONLY valid JSON with no explanations.` 
+      : `You are an AI assistant that generates user metadata profiles for content personalization. 
+         Based on the provided topic, generate a realistic user metadata profile in JSON format.
+         This profile should include styles, patterns, and preferences that would make generated content more engaging.
+         The metadata should be varied, realistic, and tailored to optimize engagement on the given topic.
+         Return ONLY valid JSON with no explanations.`;
+
+    // Build user message
+    const userMessage = existingMetadata
+      ? `Generate an updated user metadata profile for content related to the topic: "${topic}".
+         Use the existing metadata as a reference point, but evolve it with some fresh variations.
+         Here is the existing metadata:
+         ${JSON.stringify(existingMetadata, null, 2)}
+         
+         Create an updated version that keeps some continuity with the existing profile, but introduces new elements.
+         Return the complete updated metadata profile in the same format as above, with the user_id: "${userId}".`
+      : `Generate a detailed user metadata profile for content related to the topic: "${topic}". 
+         Include writing style, hashtag patterns, emoji usage, sentence structures, and engagement trends.
+         Use this template structure:
+         {
+           "user_id": "${userId}",
+           "writing_style": ["style1", "style2"],
+           "hashtag_pattern": {
+             "common_hashtags": ["hashtag1", "hashtag2"],
+             "usage_frequency": "low/moderate/high",
+             "positioning": "start/middle/end"
+           },
+           "emoji_usage": {
+             "used": true/false,
+             "common_emojis": ["emoji1", "emoji2"],
+             "positioning": "start/middle/end",
+             "frequency": "low/moderate/high"
+           },
+           "sentence_and_vocab": {
+             "avg_length_chars": 100-200,
+             "avg_length_words": 15-30,
+             "common_structures": ["question", "statement", "etc"],
+             "frequent_words": ["word1", "word2", "word3"]
+           },
+           "top_performing_tweets": {
+             "likes_threshold": 50-500,
+             "retweets_threshold": 10-100,
+             "engagement_traits": {
+               "style": ["style1", "style2"],
+               "length_range": "100-200 characters",
+               "topics": ["related topic1", "related topic2"]
+             }
+           },
+           "engagement_trends": {
+             "best_days": ["day1", "day2"],
+             "best_times": ["timerange1", "timerange2"],
+             "hot_topics": ["related hot topic1", "related hot topic2"]
+           }
+         }`;
+
     const response = await openai.chat.completions.create({
       model: 'anthropic/claude-3-opus-20240229',
       messages: [
         {
           role: 'system',
-          content: `You are an AI assistant that generates user metadata profiles for content personalization. 
-          Based on the provided topic, generate a realistic user metadata profile in JSON format.
-          This profile should include styles, patterns, and preferences that would make generated content more engaging.
-          The metadata should be varied, realistic, and tailored to optimize engagement on the given topic.
-          Return ONLY valid JSON with no explanations.`
+          content: systemMessage
         },
         {
           role: 'user',
-          content: `Generate a detailed user metadata profile for content related to the topic: "${topic}". 
-          Include writing style, hashtag patterns, emoji usage, sentence structures, and engagement trends.
-          Use this template structure:
-          {
-            "user_id": "${userId}",
-            "writing_style": ["style1", "style2"],
-            "hashtag_pattern": {
-              "common_hashtags": ["hashtag1", "hashtag2"],
-              "usage_frequency": "low/moderate/high",
-              "positioning": "start/middle/end"
-            },
-            "emoji_usage": {
-              "used": true/false,
-              "common_emojis": ["emoji1", "emoji2"],
-              "positioning": "start/middle/end",
-              "frequency": "low/moderate/high"
-            },
-            "sentence_and_vocab": {
-              "avg_length_chars": 100-200,
-              "avg_length_words": 15-30,
-              "common_structures": ["question", "statement", "etc"],
-              "frequent_words": ["word1", "word2", "word3"]
-            },
-            "top_performing_tweets": {
-              "likes_threshold": 50-500,
-              "retweets_threshold": 10-100,
-              "engagement_traits": {
-                "style": ["style1", "style2"],
-                "length_range": "100-200 characters",
-                "topics": ["related topic1", "related topic2"]
-              }
-            },
-            "engagement_trends": {
-              "best_days": ["day1", "day2"],
-              "best_times": ["timerange1", "timerange2"],
-              "hot_topics": ["related hot topic1", "related hot topic2"]
-            }
-          }`
+          content: userMessage
         }
       ],
       temperature: 0.7,
@@ -107,7 +132,12 @@ export async function generateUserMetadata(userId: string, topic: string): Promi
     });
 
     const content = response.choices[0]?.message.content || '';
-    return JSON.parse(content);
+    const parsedMetadata = JSON.parse(content);
+    
+    // Ensure the user_id is set correctly
+    parsedMetadata.user_id = userId;
+    
+    return parsedMetadata;
   } catch (error) {
     console.error('Error generating user metadata:', error);
     // Return default metadata
