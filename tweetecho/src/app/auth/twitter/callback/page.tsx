@@ -17,19 +17,32 @@ const CallbackPage = () => {
     const searchParams = new URLSearchParams(window.location.search);
     const code = searchParams.get("code");
 
-    axios.post("/api/auth/twitter/authorize", { code }).then((res) => {
-      console.log("res: ", res);
-      setIsLoading(false);
-    });
+    // Try to get from localStorage instead
+    const codeVerifier = localStorage.getItem("codeVerifier");
+    console.log(
+      "🚀 ~ useEffect ~ codeVerifier from localStorage:",
+      codeVerifier
+    );
+
+    axios
+      .post("/api/auth/twitter/authorize", { code, codeVerifier })
+      .then((res) => {
+        console.log("res: ", res);
+        setIsLoading(false);
+        localStorage.setItem("userId", res.data.id);
+        // Optionally clear the codeVerifier now that we've used it
+        localStorage.removeItem("codeVerifier");
+      });
   }, []);
 
   const postTweet = async () => {
-    const searchParams = new URLSearchParams(window.location.search);
-    const code = searchParams.get("code");
+    const userId = sessionStorage.getItem("userId");
 
-    axios.post("/api/auth/twitter/post-tweet", { code }).then((res) => {
-      console.log("res: ", res);
-    });
+    axios
+      .post("/api/auth/twitter/post-tweet", { message, userId })
+      .then((res) => {
+        console.log("res: ", res);
+      });
   };
 
   return (

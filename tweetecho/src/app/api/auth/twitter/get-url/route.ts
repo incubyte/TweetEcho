@@ -1,4 +1,4 @@
-import { saveInMemory } from "@/app/api/memory";
+// import { saveInMemory } from "@/app/api/memory";
 import {
   twitterApiClient,
   twitterCallbackUrl,
@@ -7,7 +7,7 @@ import {
 import { NextResponse } from "next/server";
 
 // api/(auth)/twitter/get-url
-export const GET = () => {
+export const GET = async () => {
   const authResponse = twitterApiClient.generateOAuth2AuthLink(
     twitterCallbackUrl,
     {
@@ -18,7 +18,5 @@ export const GET = () => {
   const codeVerifier = authResponse.codeVerifier;
   const authUrl = authResponse.url;
 
-  saveInMemory("codeVerifier", codeVerifier);
-
-  return NextResponse.json({ authUrl }, { status: 200 });
+  return NextResponse.json({ authUrl, codeVerifier }, { status: 200 });
 };

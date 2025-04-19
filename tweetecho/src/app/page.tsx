@@ -5,16 +5,11 @@ import Benefits from "@/components/sections/Benefits";
 import Features from "@/components/sections/Features";
 import ComparisonBanner from "@/components/sections/ComparisonBanner";
 import FAQ from "@/components/sections/FAQ";
-import axios from "axios";
-import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export default function HomePage() {
-  const router = useRouter();
-
   const handleConnectTwitter = () => {
-    axios.get("/api/auth/twitter/get-url").then((response) => {
-      router.replace(response.data.authUrl);
-    });
+    signIn("twitter", { callbackUrl: "/dashboard" });
   };
 
   return (
