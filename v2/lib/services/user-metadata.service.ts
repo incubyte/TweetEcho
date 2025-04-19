@@ -1,6 +1,6 @@
-import prisma from '@/lib/prisma';
-import { UserMetadataInput } from '@/lib/types/prisma';
-import { UserMetadata } from '@/lib/supabase/schemas';
+import prisma from "@/lib/prisma";
+import { UserMetadataInput } from "@/lib/types/prisma";
+import { UserMetadata } from "@/lib/supabase/schemas";
 
 /**
  * Gets the latest user metadata for a user
@@ -12,7 +12,7 @@ export async function getUserMetadata(userId: string) {
         userId,
       },
       orderBy: {
-        createdAt: 'desc',
+        createdAt: "desc",
       },
     });
 
@@ -24,15 +24,15 @@ export async function getUserMetadata(userId: string) {
       user_id: metadata.userId,
       created_at: metadata.createdAt.toISOString(),
       updated_at: metadata.updatedAt.toISOString(),
-      writing_style: metadata.writingStyle as any,
-      hashtag_pattern: metadata.hashtagPattern as any,
-      emoji_usage: metadata.emojiUsage as any,
-      sentence_and_vocab: metadata.sentenceAndVocab as any,
-      top_performing_tweets: metadata.topPerformingTweets as any,
-      engagement_trends: metadata.engagementTrends as any,
+      writing_style: metadata.writingStyle,
+      hashtag_pattern: metadata.hashtagPattern,
+      emoji_usage: metadata.emojiUsage,
+      sentence_and_vocab: metadata.sentenceAndVocab,
+      top_performing_tweets: metadata.topPerformingTweets,
+      engagement_trends: metadata.engagementTrends,
     } as UserMetadata;
   } catch (error) {
-    console.error('Error fetching user metadata:', error);
+    console.error("Error fetching user metadata:", error);
     throw error;
   }
 }
@@ -42,28 +42,28 @@ export async function getUserMetadata(userId: string) {
  */
 export async function saveUserMetadata(metadata: UserMetadata) {
   try {
-    console.log('Saving user metadata in service:', metadata);
-    
+    console.log("Saving user metadata in service:", metadata);
+
     // Convert application schema to Prisma input
     const input: UserMetadataInput = {
       userId: metadata.user_id,
       writingStyle: metadata.writing_style,
-      hashtagPattern: metadata.hashtag_pattern as any,
-      emojiUsage: metadata.emoji_usage as any,
-      sentenceAndVocab: metadata.sentence_and_vocab as any,
-      topPerformingTweets: metadata.top_performing_tweets as any,
-      engagementTrends: metadata.engagement_trends as any,
+      hashtagPattern: metadata.hashtag_pattern,
+      emojiUsage: metadata.emoji_usage,
+      sentenceAndVocab: metadata.sentence_and_vocab,
+      topPerformingTweets: metadata.top_performing_tweets,
+      engagementTrends: metadata.engagement_trends,
     };
 
-    console.log('Converted to Prisma input:', input);
+    console.log("Converted to Prisma input:", input);
 
     // Create new record
-    console.log('Creating new record in database...');
+    console.log("Creating new record in database...");
     const savedMetadata = await prisma.userMetadata.create({
       data: input,
     });
-    
-    console.log('Record created successfully:', savedMetadata);
+
+    console.log("Record created successfully:", savedMetadata);
 
     // Convert back to application schema
     return {
@@ -71,15 +71,15 @@ export async function saveUserMetadata(metadata: UserMetadata) {
       user_id: savedMetadata.userId,
       created_at: savedMetadata.createdAt.toISOString(),
       updated_at: savedMetadata.updatedAt.toISOString(),
-      writing_style: savedMetadata.writingStyle as any,
-      hashtag_pattern: savedMetadata.hashtagPattern as any,
-      emoji_usage: savedMetadata.emojiUsage as any,
-      sentence_and_vocab: savedMetadata.sentenceAndVocab as any,
-      top_performing_tweets: savedMetadata.topPerformingTweets as any,
-      engagement_trends: savedMetadata.engagementTrends as any,
+      writing_style: savedMetadata.writingStyle,
+      hashtag_pattern: savedMetadata.hashtagPattern,
+      emoji_usage: savedMetadata.emojiUsage,
+      sentence_and_vocab: savedMetadata.sentenceAndVocab,
+      top_performing_tweets: savedMetadata.topPerformingTweets,
+      engagement_trends: savedMetadata.engagementTrends,
     } as UserMetadata;
   } catch (error) {
-    console.error('Error saving user metadata:', error);
+    console.error("Error saving user metadata:", error);
     throw error;
   }
 }
@@ -90,18 +90,18 @@ export async function saveUserMetadata(metadata: UserMetadata) {
 export async function updateUserMetadata(metadata: UserMetadata) {
   try {
     if (!metadata.id) {
-      throw new Error('Cannot update metadata without ID');
+      throw new Error("Cannot update metadata without ID");
     }
 
     // Convert application schema to Prisma input
     const input: UserMetadataInput = {
       userId: metadata.user_id,
       writingStyle: metadata.writing_style,
-      hashtagPattern: metadata.hashtag_pattern as any,
-      emojiUsage: metadata.emoji_usage as any,
-      sentenceAndVocab: metadata.sentence_and_vocab as any,
-      topPerformingTweets: metadata.top_performing_tweets as any,
-      engagementTrends: metadata.engagement_trends as any,
+      hashtagPattern: metadata.hashtag_pattern,
+      emojiUsage: metadata.emoji_usage,
+      sentenceAndVocab: metadata.sentence_and_vocab,
+      topPerformingTweets: metadata.top_performing_tweets,
+      engagementTrends: metadata.engagement_trends,
     };
 
     // Update record
@@ -121,15 +121,15 @@ export async function updateUserMetadata(metadata: UserMetadata) {
       user_id: updatedMetadata.userId,
       created_at: updatedMetadata.createdAt.toISOString(),
       updated_at: updatedMetadata.updatedAt.toISOString(),
-      writing_style: updatedMetadata.writingStyle as any,
-      hashtag_pattern: updatedMetadata.hashtagPattern as any,
-      emoji_usage: updatedMetadata.emojiUsage as any,
-      sentence_and_vocab: updatedMetadata.sentenceAndVocab as any,
-      top_performing_tweets: updatedMetadata.topPerformingTweets as any,
-      engagement_trends: updatedMetadata.engagementTrends as any,
+      writing_style: updatedMetadata.writingStyle,
+      hashtag_pattern: updatedMetadata.hashtagPattern,
+      emoji_usage: updatedMetadata.emojiUsage,
+      sentence_and_vocab: updatedMetadata.sentenceAndVocab,
+      top_performing_tweets: updatedMetadata.topPerformingTweets,
+      engagement_trends: updatedMetadata.engagementTrends,
     } as UserMetadata;
   } catch (error) {
-    console.error('Error updating user metadata:', error);
+    console.error("Error updating user metadata:", error);
     throw error;
   }
 }
@@ -146,7 +146,7 @@ export async function deleteUserMetadata(id: string) {
     });
     return true;
   } catch (error) {
-    console.error('Error deleting user metadata:', error);
+    console.error("Error deleting user metadata:", error);
     throw error;
   }
 }

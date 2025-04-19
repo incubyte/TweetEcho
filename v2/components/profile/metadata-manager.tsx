@@ -113,8 +113,8 @@ export default function MetadataManager({
         ) : (
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              You don't have a content persona yet. 
-              Generate one to get personalized content recommendations.
+              {`You don't have a content persona yet. 
+              Generate one to get personalized content recommendations.`}
             </p>
             <Button 
               onClick={generateNewMetadata}

@@ -1,5 +1,3 @@
-import { Prisma } from '@prisma/client';
-
 // UserMetadata types
 export type WritingStyle = string[];
 

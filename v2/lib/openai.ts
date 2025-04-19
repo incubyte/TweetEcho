@@ -12,7 +12,8 @@ const openai = new OpenAI({
 });
 
 export async function generatePosts(
-  prompt: string, 
+  prompt: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   userMetadata: any
 ): Promise<string[]> {
   try {

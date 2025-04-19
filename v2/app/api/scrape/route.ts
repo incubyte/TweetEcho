@@ -8,7 +8,7 @@ import { cookies } from 'next/headers';
 // Helper function to check if user is authenticated
 async function checkUserAuth(userIdFromRequest: string | null) {
   try {
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
     try {
       new URL(url);
     } catch (error) {
+      console.error("Invalid URL format:", error);
       return NextResponse.json(
         { error: "Invalid URL format" },
         { status: 400 }
@@ -178,10 +179,10 @@ export async function POST(request: NextRequest) {
       description: description,
       usedStoredMetadata: !needsMetadataGeneration
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error in scrape route:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to scrape and process URL" },
+      { error: "Failed to scrape and process URL" },
       { status: 500 }
     );
   }

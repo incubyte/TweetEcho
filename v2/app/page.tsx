@@ -4,14 +4,16 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import SignInButton from "@/components/auth/signin-button";
 import { supabase } from "@/lib/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { User } from "@supabase/supabase-js";
 import { getUserMetadata, getUserWebContent } from "@/lib/supabase/api";
 import { UserMetadata, WebContent } from "@/lib/supabase/schemas";
-import MetadataManager from "@/components/profile/metadata-manager";
-import WebContentManager from "@/components/profile/web-content-manager";
+import Benefits from "@/components/sections/Benefits";
+import Hero from "@/components/sections/Hero";
+import Features from "@/components/sections/Features";
+import ComparisonBanner from "@/components/sections/ComparisonBanner";
+import FAQ from "@/components/sections/FAQ";
 
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
@@ -21,7 +23,7 @@ export default function Home() {
   const [messages, setMessages] = useState<
     { text: string; timestamp: string; isAiGenerated?: boolean }[]
   >([]);
-  const [metadata, setMetadata] = useState<any>(null);
+  const [metadata, setMetadata] = useState<UserMetadata | null>(null);
   const [webContent, setWebContent] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isScrapingUrl, setIsScrapingUrl] = useState(false);
@@ -112,10 +114,11 @@ export default function Home() {
     try {
       // Call the API to generate posts with metadata
       // Add origin to make it an absolute URL when running on server
-      const baseUrl = typeof window !== 'undefined' 
-        ? window.location.origin 
-        : 'http://localhost:3000';
-        
+      const baseUrl =
+        typeof window !== "undefined"
+          ? window.location.origin
+          : "http://localhost:3000";
+
       const response = await fetch(`${baseUrl}/api/generate-posts`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -124,7 +127,7 @@ export default function Home() {
           userId: user?.id || "user-123",
           useStoredMetadata: true, // Try to use stored metadata if available
         }),
-        credentials: 'include'
+        credentials: "include",
       });
 
       if (!response.ok) {
@@ -237,21 +240,25 @@ export default function Home() {
 
                           setIsScrapingUrl(true);
                           try {
-                            // Add origin to make it an absolute URL when running on server 
-                            const baseUrl = typeof window !== 'undefined' 
-                              ? window.location.origin 
-                              : 'http://localhost:3000';
-                              
-                            const response = await fetch(`${baseUrl}/api/scrape`, {
-                              method: "POST",
-                              headers: { "Content-Type": "application/json" },
-                              body: JSON.stringify({
-                                url: urlInput,
-                                userId: user?.id || "user-123",
-                                useStoredMetadata: true, // Try to use stored metadata if available
-                              }),
-                              credentials: 'include'
-                            });
+                            // Add origin to make it an absolute URL when running on server
+                            const baseUrl =
+                              typeof window !== "undefined"
+                                ? window.location.origin
+                                : "http://localhost:3000";
+
+                            const response = await fetch(
+                              `${baseUrl}/api/scrape`,
+                              {
+                                method: "POST",
+                                headers: { "Content-Type": "application/json" },
+                                body: JSON.stringify({
+                                  url: urlInput,
+                                  userId: user?.id || "user-123",
+                                  useStoredMetadata: true, // Try to use stored metadata if available
+                                }),
+                                credentials: "include",
+                              }
+                            );
 
                             if (!response.ok) {
                               const errorData = await response.json();
@@ -303,13 +310,9 @@ export default function Home() {
                             // Add AI-generated messages to the state
                             setMessages((prev) => [...prev, ...aiPosts]);
                             setUrlInput("");
-                          } catch (error: any) {
+                          } catch (error) {
                             console.error("Error scraping URL:", error);
-                            alert(
-                              `Failed to scrape the URL: ${
-                                error.message || "Unknown error"
-                              }`
-                            );
+                            alert(`Failed to scrape the URL`);
                           } finally {
                             setIsScrapingUrl(false);
                           }
@@ -329,13 +332,6 @@ export default function Home() {
                 </div>
 
                 <div className="relative rounded-lg border border-[hsl(var(--border))] p-4">
-                  {webContent && (
-                    <div className="absolute top-0 right-0 transform translate-x-1/3 -translate-y-1/3">
-                      <span className="inline-flex items-center rounded-full bg-[hsl(var(--primary))] px-2 py-1 text-xs font-medium text-[hsl(var(--primary-foreground))]">
-                        Recommended
-                      </span>
-                    </div>
-                  )}
                   <h4 className="text-sm font-medium mb-3">
                     Option 2: Enter a topic directly
                   </h4>
@@ -378,14 +374,9 @@ export default function Home() {
                             <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--primary))] text-[hsl(var(--primary-foreground))]">
                               AI Generated
                             </span>
-                            {(webContent || msg.usedWebContent) && (
+                            {webContent && (
                               <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsl(var(--secondary))] text-[hsl(var(--secondary-foreground))]">
                                 Web-Informed
-                              </span>
-                            )}
-                            {msg.usedStoredMetadata && (
-                              <span className="text-xs font-medium px-2 py-1 rounded-full bg-[hsla(var(--accent),0.8)] text-[hsl(var(--accent-foreground))]">
-                                Using Your Profile
                               </span>
                             )}
                           </div>
@@ -510,7 +501,7 @@ export default function Home() {
                   <div className="space-y-3 mt-4 pt-4 border-t border-[hsl(var(--border))]">
                     <h4 className="font-medium text-base">Content Profile</h4>
                     <p className="text-sm text-muted-foreground">
-                      You don't have a content profile yet. Generate one by
+                      You don&apos;t have a content profile yet. Generate one by
                       analyzing a webpage or entering a topic above.
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -580,80 +571,12 @@ export default function Home() {
   }
 
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-
-        <div className="text-center sm:text-left max-w-md">
-          <h1 className="text-3xl font-bold mb-4">Welcome to our App</h1>
-          <p className="mb-8 text-muted-foreground">
-            Sign in with Google to get started and access your personalized
-            dashboard.
-          </p>
-        </div>
-
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <SignInButton />
-
-          <Button variant="outline" asChild>
-            <Link href="/shadcn-demo">View UI Demo</Link>
-          </Button>
-        </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+    <div className="min-h-screen bg-white dark:bg-gray-900">
+      <Hero />
+      <Benefits />
+      <Features />
+      <ComparisonBanner />
+      <FAQ />
     </div>
   );
 }
