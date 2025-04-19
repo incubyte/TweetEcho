@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generatePosts } from '@/lib/openai';
+import { generatePosts, getMetadata } from '@/lib/openai';
 
 export async function POST(request: NextRequest) {
   try {
-    const { prompt } = await request.json();
+    const { prompt, userId } = await request.json();
     
     if (!prompt || typeof prompt !== 'string') {
       return NextResponse.json(
@@ -12,9 +12,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const posts = await generatePosts(prompt);
+    // Generate user metadata first
+    const userMetadata = await getMetadata(prompt, userId || 'user-123');
     
-    return NextResponse.json({ posts });
+    // Generate posts using the metadata
+    const posts = await generatePosts(prompt, userId || 'user-123');
+    
+    return NextResponse.json({ 
+      posts,
+      metadata: userMetadata
+    });
   } catch (error) {
     console.error('Error in generate-posts route:', error);
     return NextResponse.json(

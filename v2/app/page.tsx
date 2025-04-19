@@ -14,6 +14,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [messages, setMessages] = useState<{text: string, timestamp: string, isAiGenerated?: boolean}[]>([]);
+  const [metadata, setMetadata] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -52,11 +53,14 @@ export default function Home() {
     setIsSubmitting(true);
     
     try {
-      // Call the API to generate posts
+      // Call the API to generate posts with metadata
       const response = await fetch('/api/generate-posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: message })
+        body: JSON.stringify({ 
+          prompt: message,
+          userId: user?.id || 'user-123'
+        })
       });
       
       if (!response.ok) {
@@ -64,6 +68,9 @@ export default function Home() {
       }
       
       const data = await response.json();
+      
+      // Store the metadata
+      setMetadata(data.metadata);
       
       // Get current timestamp to ensure posts appear together
       const currentTime = new Date().toISOString();
@@ -153,7 +160,7 @@ export default function Home() {
 
               {messages.length > 0 && (
                 <div className="mt-8">
-                  <h3 className="text-lg font-medium mb-4">Generated Thought-Starters</h3>
+                  <h3 className="text-lg font-medium mb-4">Personalized Content Suggestions</h3>
                   <div className="space-y-4">
                     {messages.map((msg, index) => (
                       <div 
@@ -186,13 +193,66 @@ export default function Home() {
 
           <Card>
             <CardHeader>
-              <CardTitle>Account Info</CardTitle>
+              <CardTitle>Profile & Metadata</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2 text-sm">
-              <p><strong>User ID:</strong> {user.id.substring(0, 8)}...</p>
-              <p><strong>Last Sign In:</strong> {new Date(user.last_sign_in_at || '').toLocaleString()}</p>
-              <p><strong>Created At:</strong> {new Date(user.created_at || '').toLocaleDateString()}</p>
-              <p><strong>Provider:</strong> {user.app_metadata?.provider || 'Google'}</p>
+            <CardContent className="space-y-4 text-sm">
+              <div className="space-y-2">
+                <h4 className="font-medium text-base">Account Info</h4>
+                <p><strong>User ID:</strong> {user.id.substring(0, 8)}...</p>
+                <p><strong>Provider:</strong> {user.app_metadata?.provider || 'Google'}</p>
+              </div>
+              
+              {metadata && (
+                <div className="space-y-3 mt-4 pt-4 border-t border-[hsl(var(--border))]">
+                  <h4 className="font-medium text-base">Content Preferences</h4>
+                  
+                  <div>
+                    <p className="font-medium mb-1">Writing Style</p>
+                    <div className="flex flex-wrap gap-1">
+                      {metadata.writing_style.map((style: string, i: number) => (
+                        <span 
+                          key={i} 
+                          className="px-2 py-0.5 bg-[hsla(var(--primary),0.1)] text-[hsl(var(--primary))] rounded-full text-xs"
+                        >
+                          {style}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <p className="font-medium mb-1">Common Hashtags</p>
+                    <div className="flex flex-wrap gap-1">
+                      {metadata.hashtag_pattern.common_hashtags.map((tag: string, i: number) => (
+                        <span 
+                          key={i} 
+                          className="px-2 py-0.5 bg-[hsla(var(--secondary),0.1)] text-[hsl(var(--primary))] rounded-full text-xs"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  {metadata.emoji_usage.used && (
+                    <div>
+                      <p className="font-medium mb-1">Emoji Usage</p>
+                      <p className="text-lg">
+                        {metadata.emoji_usage.common_emojis.join('  ')}
+                      </p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <p className="font-medium mb-1">Hot Topics</p>
+                    <ul className="list-disc pl-5 space-y-1">
+                      {metadata.engagement_trends.hot_topics.map((topic: string, i: number) => (
+                        <li key={i}>{topic}</li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

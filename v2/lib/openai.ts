@@ -1,4 +1,5 @@
 import OpenAI from 'openai';
+import { generateUserMetadata } from './metadata-generator';
 
 // Create an OpenAI API client (that uses OpenRouter)
 const openai = new OpenAI({
@@ -10,21 +11,34 @@ const openai = new OpenAI({
   }
 });
 
-export async function generatePosts(prompt: string): Promise<string[]> {
+export async function generatePosts(prompt: string, userId: string = 'user-123'): Promise<string[]> {
   try {
+    // First generate user metadata based on the prompt
+    const userMetadata = await generateUserMetadata(userId, prompt);
+    
+    // Then use the metadata to generate personalized posts
     const response = await openai.chat.completions.create({
       model: 'anthropic/claude-3-opus-20240229',
       messages: [
         {
           role: 'system',
           content: `You are a creative writing assistant that generates thought-provoking and engaging social media posts. 
-          Generate exactly THREE unique posts based on the user's input topic. 
+          Generate exactly THREE unique posts based on the user's input topic and metadata profile.
+          
+          IMPORTANT - Personalize your response based on the user metadata. Consider:
+          - Writing style: ${userMetadata.writing_style.join(', ')}
+          - Hashtag pattern: ${userMetadata.hashtag_pattern.common_hashtags.join(', ')} (${userMetadata.hashtag_pattern.usage_frequency} frequency, positioned at ${userMetadata.hashtag_pattern.positioning})
+          - Emoji usage: ${userMetadata.emoji_usage.used ? 'Yes' : 'No'} (${userMetadata.emoji_usage.common_emojis.join(', ')}, ${userMetadata.emoji_usage.frequency} frequency, positioned at ${userMetadata.emoji_usage.positioning})
+          - Sentence style: Average length ${userMetadata.sentence_and_vocab.avg_length_words} words, common structures: ${userMetadata.sentence_and_vocab.common_structures.join(', ')}
+          - Top-performing content: ${userMetadata.top_performing_tweets.engagement_traits.style.join(', ')} style, length range ${userMetadata.top_performing_tweets.engagement_traits.length_range}
+          - Hot topics: ${userMetadata.engagement_trends.hot_topics.join(', ')}
+          
           Each post should be:
           1. Different in style, tone, and perspective
           2. Concise (1-3 sentences only)
           3. Thought-provoking and conversation-starting
           4. Not directly quote or mention the user's exact prompt
-          5. Suitable for a knowledge-sharing social platform
+          5. Match the user's writing style and preferences from metadata
           
           Return only the three generated posts, each on its own line. Do not include any explanatory text, post numbers, or formatting.`
         },
@@ -34,7 +48,7 @@ export async function generatePosts(prompt: string): Promise<string[]> {
         }
       ],
       temperature: 0.8,
-      max_tokens: 600,
+      max_tokens: 800,
       n: 1,
     });
 
@@ -64,6 +78,10 @@ export async function generatePosts(prompt: string): Promise<string[]> {
       "The intersection of different perspectives often reveals surprising truths."
     ];
   }
+}
+
+export async function getMetadata(prompt: string, userId: string = 'user-123') {
+  return generateUserMetadata(userId, prompt);
 }
 
 export default openai;
