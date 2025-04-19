@@ -10,7 +10,7 @@ export async function initializeUser(userId: string): Promise<boolean> {
     
     // Check if user metadata already exists
     const existingMetadata = await prisma.userMetadata.findFirst({
-      where: { user_id: userId }
+      where: { userId }
     });
     
     // If metadata exists, user is already initialized
@@ -22,29 +22,29 @@ export async function initializeUser(userId: string): Promise<boolean> {
     // Create default user metadata
     await prisma.userMetadata.create({
       data: {
-        user_id: userId,
-        writing_style: ["conversational", "friendly", "informative"],
-        hashtag_pattern: {
+        userId: userId,
+        writingStyle: ["conversational", "friendly", "informative"],
+        hashtagPattern: {
           common_hashtags: ["#tech", "#news", "#innovation"],
           hashtags_per_post: 2,
           placement: "end"
         },
-        emoji_usage: {
+        emojiUsage: {
           frequency: "moderate",
           common_emojis: ["👍", "🙂", "🚀"],
           placement: "throughout"
         },
-        sentence_and_vocab: {
+        sentenceAndVocab: {
           avg_sentence_length: 15,
           preferred_sentence_types: ["statement", "question"],
           vocabulary_level: "general",
           recurring_phrases: ["Thanks for sharing", "Interesting point"]
         },
-        top_performing_tweets: {
+        topPerformingTweets: {
           topics: ["technology", "current_events", "personal_updates"],
           formats: ["questions", "lists", "opinions"]
         },
-        engagement_trends: {
+        engagementTrends: {
           hot_topics: ["AI", "climate", "productivity"],
           best_posting_times: ["morning", "evening"],
           engagement_patterns: ["replies", "retweets"]

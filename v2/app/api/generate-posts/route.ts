@@ -76,7 +76,52 @@ export async function POST(request: NextRequest) {
     
     // Generate metadata if needed
     if (needsMetadataGeneration) {
-      userMetadata = await getMetadata(prompt, userId || 'user-123');
+      // Generate new metadata
+      const newMetadata = await getMetadata(prompt, userId || 'user-123');
+      
+      // If there's a logged-in user, save or update the metadata
+      if (userId) {
+        const isAuthenticated = await checkUserAuth(userId);
+        if (isAuthenticated) {
+          try {
+            // Import user metadata service
+            const { getUserMetadata, saveUserMetadata, updateUserMetadata } = 
+              await import('@/lib/services/user-metadata.service');
+            
+            // Check if user has existing metadata
+            const existingMetadata = await getUserMetadata(userId);
+            
+            if (existingMetadata) {
+              // Update existing metadata with new values
+              console.log('Updating existing metadata with newly generated data');
+              const updateData = {
+                ...existingMetadata,
+                writing_style: newMetadata.writing_style,
+                hashtag_pattern: newMetadata.hashtag_pattern,
+                emoji_usage: newMetadata.emoji_usage,
+                sentence_and_vocab: newMetadata.sentence_and_vocab,
+                top_performing_tweets: newMetadata.top_performing_tweets,
+                engagement_trends: newMetadata.engagement_trends
+              };
+              
+              userMetadata = await updateUserMetadata(updateData);
+            } else {
+              // Save new metadata
+              console.log('Saving newly generated metadata');
+              newMetadata.user_id = userId;
+              userMetadata = await saveUserMetadata(newMetadata);
+            }
+          } catch (error) {
+            console.error('Error saving/updating metadata:', error);
+            // Use the generated metadata directly if saving fails
+            userMetadata = newMetadata;
+          }
+        } else {
+          userMetadata = newMetadata;
+        }
+      } else {
+        userMetadata = newMetadata;
+      }
     }
     
     // Generate posts using the metadata
