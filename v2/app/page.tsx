@@ -12,6 +12,9 @@ import { User } from "@supabase/supabase-js";
 export default function Home() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState<{text: string, timestamp: string}[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     async function getUser() {
@@ -40,6 +43,23 @@ export default function Home() {
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
+  };
+  
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!message.trim()) return;
+    
+    setIsSubmitting(true);
+    
+    // Add the message to the list
+    const newMessage = {
+      text: message,
+      timestamp: new Date().toISOString()
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    setMessage("");
+    setIsSubmitting(false);
   };
 
   if (loading) {
@@ -85,18 +105,45 @@ export default function Home() {
                 </div>
               </div>
               
-              <div className="space-y-2">
-                <Button asChild className="w-full justify-start">
-                  <Link href="/dashboard">
-                    Go to Dashboard
-                  </Link>
+              <form onSubmit={handleSubmit} className="space-y-4 mt-6">
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium mb-2">
+                    Share your thoughts
+                  </label>
+                  <textarea
+                    id="message"
+                    rows={4}
+                    placeholder="What's on your mind?"
+                    className="w-full rounded-md border border-[hsl(var(--border))] bg-transparent p-3 text-sm shadow-sm focus:border-[hsl(var(--ring))] focus:outline-none focus:ring-1 focus:ring-[hsl(var(--ring))]"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                  />
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full"
+                  disabled={isSubmitting || !message.trim()}
+                >
+                  {isSubmitting ? "Submitting..." : "Post Message"}
                 </Button>
-                <Button variant="outline" asChild className="w-full justify-start">
-                  <Link href="/shadcn-demo">
-                    View UI Components
-                  </Link>
-                </Button>
-              </div>
+              </form>
+
+              {messages.length > 0 && (
+                <div className="mt-8">
+                  <h3 className="text-lg font-medium mb-4">Your Messages</h3>
+                  <div className="space-y-4">
+                    {messages.map((msg, index) => (
+                      <div key={index} className="border border-[hsl(var(--border))] rounded-md p-4">
+                        <p>{msg.text}</p>
+                        <p className="text-xs text-muted-foreground mt-2">
+                          {new Date(msg.timestamp).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
             </CardContent>
           </Card>
 
