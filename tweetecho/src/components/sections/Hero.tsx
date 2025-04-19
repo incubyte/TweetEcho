@@ -97,7 +97,7 @@ const Hero = ({ handleTwitterLogin }: { handleTwitterLogin: () => void }) => {
               onClick={handleTwitterLogin}
             >
               <TwitterIcon className="w-4 h-4 mr-2" />
-              Connect with Twitter/X
+              Sign in with Twitter
             </Button>
           </div>
         </div>
