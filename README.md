@@ -66,4 +66,18 @@ Key features include:
    Open [http://localhost:3000](http://localhost:3000) in your browser to see the application.
 
 ## Takeaways
+- **Effective AI Prompting Strategy**:
+  - Small, accurate prompts work better than lengthy, low-context ones
+  - LLMs predict token probabilities more accurately with specific context
+  - Be precise and targeted rather than vague and general
 
+- **AI-Driven UI Development Best Practices**:
+  - Create user stories and basic wireframes before writing your first prompt
+  - Use step-by-step prompting for more accurate results
+  - Instead of "Create a landing page for an AI writer," use "Create a landing page, starting with a hero banner with text and a CTA"
+  - Break down complex UI requests into component-specific instructions
+
+- **Iterative Refinement Process**:
+  - Start with targeted prompts to generate baseline components
+  - Review, refine, and provide additional context for improvements
+  - Use the output as a foundation to build upon rather than expecting perfect results immediately
